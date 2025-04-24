@@ -1,7 +1,9 @@
+
 from flask import Flask, request, jsonify
 import pickle
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -44,4 +46,5 @@ def predict():
         return jsonify({'error': f'Resource loading failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
