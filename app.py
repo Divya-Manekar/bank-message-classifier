@@ -3,21 +3,6 @@ import pickle
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Load and prepare data
-df = pd.read_csv('bank.csv')
-
-# Fill missing text values to avoid NaN errors
-df['text'] = df['text'].fillna('')
-
-# Initialize and fit the TF-IDF vectorizer
-tfidf = TfidfVectorizer()
-tfidf.fit(df['text'])
-
-# Load your trained model (make sure model.pkl exists)
-model = pickle.load(open('model.pkl', 'rb'))
-
-
-
 # Initialize Flask app
 app = Flask(__name__)
 
@@ -36,9 +21,27 @@ def predict():
     text = request.form.get('text')
     if not text:
         return jsonify({'error': 'No text provided'}), 400
-    vector_input = tfidf.transform([text]).toarray()
-    result = model.predict(vector_input)[0]
-    return jsonify({'target': str(result)})
+
+    try:
+        # Load and prepare data
+        df = pd.read_csv('bank.csv')
+        df['text'] = df['text'].fillna('')
+
+        # Initialize and fit the TF-IDF vectorizer
+        tfidf = TfidfVectorizer()
+        tfidf.fit(df['text'])
+
+        # Load the trained model
+        model = pickle.load(open('model.pkl', 'rb'))
+
+        # Transform input and predict
+        vector_input = tfidf.transform([text]).toarray()
+        result = model.predict(vector_input)[0]
+
+        return jsonify({'target': str(result)})
+
+    except Exception as e:
+        return jsonify({'error': f'Resource loading failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
